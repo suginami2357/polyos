@@ -1,22 +1,21 @@
 import { BoardType } from "../types";
+import { AnyCells } from "../libs/cell";
 
-const Board = ({board, brock} : BoardType) => {
-  //画面にブロックを反映する
-  // brock.map((row) => {
-  //   row.map((cell) => {
-  //     board[cell.Row][cell.Column].Class = cell.Class;
-  //   })
-  // })
+const Board = ({board, brock} : BoardType) => {  
+  let brockCells = AnyCells(brock);
   return(
     <table className="board-table">
       <tbody>
         {board.map((row, index) => {
           return (
             <tr key={index}>
-              {row.map((cell, index) => {
-                return (
-                  <td key={index} className={cell.Class}></td>
-                );
+              {row.map((boardCell, index) => {
+                let brockCell = brockCells.find(x => x.Row == boardCell.Row && x.Column == boardCell.Column);
+                if(brockCell === undefined){
+                  return (<td key={index} className={boardCell.ClassName}></td>)
+                } else{
+                  return (<td key={index} className={brockCell.ClassName}></td>);
+                }
               })}
             </tr>
           );

@@ -2,18 +2,17 @@ import { LocationDataType } from "../types";
 import { CellDataType } from "../types";
 import { New } from "./cell";
 import { Random } from "./number";
+import { DeepCopy, AnyCells } from "./cell";
+import { Collision } from "./board";
 
 //生成
 export const Generate = (length: number) : CellDataType[][] => {
   //枠を生成
   let brock = New(5, 5, 0, 3);
 
-  //色を指定
-  let className = 'block-color-black';
-    
   //真ん中をスタート地点とする
   let location: LocationDataType = {Row: 2, Column: 2}
-  brock[location.Row][location.Column].Class = className;
+  brock[location.Row][location.Column].ClassName = 'block-type-red';
 
   for(let i = 0; i < length; i++){
 
@@ -32,7 +31,7 @@ export const Generate = (length: number) : CellDataType[][] => {
       return brock;
     }
 
-    //一定確立で真ん中に戻す事で形にランダム性を持たせる
+    //一定確立で真ん中に戻してランダム性を持たせる
     let index = Random(choices.length + 1);
     if(index == choices.length){
       i--;
@@ -42,28 +41,43 @@ export const Generate = (length: number) : CellDataType[][] => {
 
     //色を塗る
     location = {Row: choices[index].Row, Column: choices[index].Column}
-    brock[location.Row][location.Column].Class = className;  
+    brock[location.Row][location.Column].ClassName = 'block-color-black';
   }
   return brock;
 }
 
 //落下
-export const Fall = (brock: CellDataType[][]) => {
-  brock.map((row) => {
-    row.map((cell) => {
-      cell.Row++;
-    })
-  })
-  return brock;
+export const Fall = (brock: CellDataType[][]): CellDataType[][] => {
+  let result = DeepCopy(brock);
+  result.flat().forEach(x => x.Row++);
+  return result;
 }
 
 //回転
-export const Rotate = (brock: CellDataType[][]) => {
-  return brock;
+export const Rotate = (board: CellDataType[][], brock: CellDataType[][]): CellDataType[][] => {
+  let result = brock.map((line) => line.map((cell) => {
+    let axis = brock[2][2];
+    let row = axis.Row - (cell.Column - axis.Column);
+    let column = axis.Column + (cell.Row - axis.Row);
+    return new CellDataType(row, column, cell.ClassName)
+  }))
+
+  if(AnyCells(result).some(x => x.Column < 0 || x.Column > 9)){
+    return brock;
+  }
+
+  if(AnyCells(result).some(x => x.Row < 0 || x.Row > 19)){
+    return brock;
+  }
+
+  if(Collision(board, result)){
+    return brock;
+  }
+  return result;
 }
 
 //ハードドロップ
-export const HardDrop = (brock: CellDataType[][], board: CellDataType[][]) => {
+export const HardDrop = (board: CellDataType[][], brock: CellDataType[][]) => {
   //落下中ブロックの一番下の row を取得
   let src = Math.min(...brock.flat().map(x => x.Row));
 
@@ -79,39 +93,29 @@ export const HardDrop = (brock: CellDataType[][], board: CellDataType[][]) => {
 }
 
 //左移動
-export const Left = (brock: CellDataType[][]) => {
-  brock.map((row) => {
-    row.map((cell) => {
-      if(cell.Column == 0){
-        return;
-      }
-    })
-  })
+export const Left = (board: CellDataType[][], brock: CellDataType[][]): CellDataType[][] => {
+  if(AnyCells(brock).some(x => x.Column <= 0)){
+    return brock;
+  }
 
-  brock.map((row) => {
-    row.map((cell) => {
-      cell.Column--;
-    })
-  })
-  return brock;
+  let result = DeepCopy(brock);
+  result.flat().forEach(x => x.Column--);
+  if(Collision(board, result)){
+    return brock;
+  }
+  return result;
 }
 
 //右移動
-export const Right = (brock: CellDataType[][]) => {
-  brock.map((row) => {
-    row.map((cell) => {
-      if(cell.Column == 10){
-        return;
-      }
-    })
-  })
+export const Right = (board: CellDataType[][], brock: CellDataType[][]): CellDataType[][] => {
+  if(AnyCells(brock).some(x => x.Column >= 9)){
+    return brock;
+  }
 
-  brock.map((row) => {
-    row.map((cell) => {
-      cell.Column++;
-    })
-  })
-  return brock;
+  let result = DeepCopy(brock);
+  result.flat().forEach(x => x.Column++);
+  if(Collision(board, result)){
+    return brock;
+  }
+  return result;
 }
-
-

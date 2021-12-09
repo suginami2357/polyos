@@ -10,8 +10,8 @@ const Next = ({brock}: NextType) => {
               <tr key={index}>
                 {row.map((cell, index) => {
                   return(
-                    <td key={index} className={cell.Class}></td>
-                  );                  
+                    <td key={index} className={cell.ClassName}></td>
+                  );
                 })}
               </tr>
             );

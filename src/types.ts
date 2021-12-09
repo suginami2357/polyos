@@ -1,13 +1,19 @@
 
 export type GameType = {
+  step: number,
+  setBoard: React.Dispatch<React.SetStateAction<CellDataType[][]>>,
   board: CellDataType[][],
-  current: CellDataType[][],
+  setBrock: React.Dispatch<React.SetStateAction<CellDataType[][]>>,
+  brock: CellDataType[][],
+  setNext: React.Dispatch<React.SetStateAction<CellDataType[][]>>,
   next: CellDataType[][],
   score: number,
+  length: number,
 }
 
 export type BoardType = {
   board: CellDataType[][],
+  setBrock: React.Dispatch<React.SetStateAction<CellDataType[][]>>,
   brock: CellDataType[][],
 }
 
@@ -27,16 +33,21 @@ export interface LocationDataType {
 }
 
 export class CellDataType {
-  constructor(row: number, column: number){
+  constructor(row: number, column: number, className: string = ""){
     this.Row = row;
     this.Column = column;
+    this.ClassName = className;
   }
 
-  Row: number = 0;
-  Column: number = 0;
-  Class: string = "";
+  Row: number;
+  Column: number;
+  ClassName: string;
 
   Enpty(): boolean {
-    return this.Class == ""
+    return this.ClassName === ""
+  }
+
+  Any(): boolean {
+    return !this.Enpty();
   }
 }
