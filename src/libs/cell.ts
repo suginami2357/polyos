@@ -1,21 +1,24 @@
-import { CellDataType } from "../types";
+import { FallingBrockDataType, FixedBrockDataType } from "../types";
+import * as constant from "../constants"
 
-export const New = (rowLength: number, columnLength: number, row = 0, column = 0): CellDataType[][] => {
-  return Array.from(new Array<CellDataType>(rowLength), (_, rowIndex) => {
-    return Array.from(new Array<CellDataType>(columnLength), (_, columnIndex) => { 
-      return new CellDataType(row + rowIndex, column + columnIndex) 
-    });
- });
+export function DeepCopy(brock: FallingBrockDataType[][]): FallingBrockDataType[][];
+export function DeepCopy(brock: FixedBrockDataType[][]): FixedBrockDataType[][];
+
+export function DeepCopy(brock: any[][]): any {
+  return brock.map((row)=> row.map((cell) => {
+    if(cell instanceof FixedBrockDataType){
+      return new FixedBrockDataType(cell.className);
+    }
+    if(cell instanceof FallingBrockDataType){
+      return new FallingBrockDataType(cell.row, cell.column, cell.className);
+    }
+  }));
 }
 
-export const DeepCopy = (brock: CellDataType[][]): CellDataType[][] => {
-  return brock.map((row) => row.map((cell) => {
-    let result = new CellDataType(cell.Row, cell.Column);
-    result.ClassName = cell.ClassName;
-    return result;
-  }))
-}
-
-export const AnyCells = (data: CellDataType[][]): CellDataType[] => {
-  return data.flat().filter((cell) => cell.Any()); 
+export const AnyCells = (falling: FallingBrockDataType[][]): FallingBrockDataType[] => {
+  return falling.flat().filter((cell) => 
+    (0 <= cell.row     && cell.row     <= constant.Fixed.height) &&
+    (0 <= cell.column  && cell.column  <= constant.Fixed.width) &&
+    cell.Any()
+  ); 
 }

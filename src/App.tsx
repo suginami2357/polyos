@@ -1,78 +1,132 @@
+import React from 'react';
+import { useState, useEffect, useRef } from "react";
 import Game from "./pages/Game";
-import { useState, useEffect } from "react";
-import { New } from "./libs/cell";
-import { Generate, Fall, Rotate, HardDrop, Left, Right, } from "./libs/brock";
-import { CellDataType } from "./types";
+import * as _brock from "./libs/brock";
+import * as _types from "./types";
 
 function App() {
   const[step, setStep] = useState<number>(0);
-  const[time, setTime] = useState<number>(300);
-  const[length, setLength] = useState<number>(4);
   const[score, setScore] = useState<number>(0);
+  const[fixed, setFixed] = useState<_types.FixedBrockDataType[][]>(_brock.Fixed());
+  const[falling, setFalling] = useState<_types.FallingBrockDataType[][]>(_brock.Falling());
+  const[next, setNext] = useState<_types.FallingBrockDataType[][]>(_brock.Falling());
 
-  const[board, setBoard] = useState<CellDataType[][]>(New(20, 10));
-  const[brock, setBrock] = useState<CellDataType[][]>(Generate(length));
-  const[next, setNext] = useState<CellDataType[][]>(Generate(length));
+  const[accelerate, setAccelerate] = useState<boolean>(false);
 
-  //スコアからゲームスピード・ブロックサイズを設定
+
+  const ref = useRef<HTMLTableCellElement>(null)
+
   useEffect(() => {
-    setTime(300 - (score * 8));
-    setLength(4 + (score / 20));
-  }, [score]);
+    window.KeyDown = {};
+    window.Swipe = {
+      isMove: false, 
+      X: 0,
+      Y: 0,
+    }
+  },[])
 
-  //ゲーム処理
   useEffect(() => {
     (async() => {
+      let time = accelerate ? 25 : Math.max(100, 500 - (score * 5));
       await new Promise(r => setTimeout(r, time));
       setStep(step + 1);
     })();
   }, [step])
+//-- EventHandler
 
+//--タッチ操作
+  window.ontouchstart = (e) => {
+    e.preventDefault();
 
-//--EventHandler
-  window.onload = () => { window.isKeyDown = {} }
+    window.Swipe.X = e.touches[0].pageX;
+    window.Swipe.Y = e.touches[0].pageY;
+  }
 
-  window.onkeydown = (e) => {
-    if(window.isKeyDown[e.key]){
+  window.ontouchmove = (e) => {
+    e.preventDefault();
+
+    window.Swipe.isMove = true;
+    let touch = e.touches[0];
+
+    if(ref.current === null){
       return;
     }
-    window.isKeyDown[e.key] = true;
+    let leftBorder = ref.current.offsetLeft -5;
+    let rightBorder = ref.current.offsetLeft + ref.current.offsetWidth + 5;
 
+    //左にスワイプ
+    if(touch.pageX < leftBorder){
+      setFalling(_brock.Left(fixed, falling));
+      setAccelerate(false);
+      window.Swipe.Y = touch.pageY;
+    } 
+    //右にスワイプ
+    else if(touch.pageX > rightBorder + 1){
+      setFalling(_brock.Right(fixed, falling));
+      setAccelerate(false);
+      window.Swipe.Y = touch.pageY;
+    }
+    //下にスワイプ
+    else if(touch.pageY > window.Swipe.Y){
+      setAccelerate(true);
+    }
+  }
+
+  window.ontouchend = (e) => {
+    e.preventDefault();
+
+    setAccelerate(false);
+    if(!window.Swipe.isMove){
+      setFalling(_brock.Rotate(fixed, falling));
+    }
+    window.Swipe.isMove = false;
+  }
+
+//-- キーボード操作
+  window.onkeydown = (e) => {
+    if(window.KeyDown[e.key]){ 
+      return; 
+    } 
+    window.KeyDown[e.key] = true;
+    
     switch (e.key) {
-      case '':
-        // HardDrop(brock, board);
+      case 'ArrowUp':
+        setFalling(_brock.Rotate(fixed, falling));
         break;
 
-      case 'ArrowUp':
-        setBrock(Rotate(board, brock));
-        break;
+        case 'ArrowDown':
+          setAccelerate(true);
+          break;
 
       case 'ArrowLeft':
-        setBrock(Left(board, brock));
+        setFalling(_brock.Left(fixed, falling));
         break;
 
       case 'ArrowRight':
-        setBrock(Right(board, brock));
-        break;
-
-      case 'ArrowDown':
-        setTime(time / 4);
+        setFalling(_brock.Right(fixed, falling));
         break;
     }
   }
 
   window.onkeyup = (e) => {
-    window.isKeyDown[e.key] = false;
-    switch(e.key){
-      case 'ArrowDown':
-        setTime(time * 4);
-        break;
-    }
+    window.KeyDown[e.key] = false;
+    setAccelerate(false);
   }
 
   return (
     <div className="App">
-      <Game step={step} setBoard={setBoard} board={board} setBrock={setBrock} brock={brock} setNext={setNext} next={next} score={score} length={length} />
+      <Game 
+        ref={ref} 
+        step={step} 
+        setFixed={setFixed} 
+        fixed={fixed} 
+        setFalling={setFalling} 
+        falling={falling} 
+        setNext={setNext} 
+        next={next} 
+        setScore={setScore} 
+        score={score} 
+      />
     </div>
   );
 }

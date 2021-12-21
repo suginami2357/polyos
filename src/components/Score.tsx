@@ -1,8 +1,13 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { useEffect } from "react";
 import { ScoreType } from "../types";
 
 const Score = ({score}: ScoreType) => {
   return(
-    <div></div>
+    <div>
+    <p>SCORE:{score}</p>
+    </div>
   );
 };
 

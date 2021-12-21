@@ -22,12 +22,12 @@ html {
   height: 25px;
   margin: 0px;
   padding: 0px;
-  border: solid 1px gray;
-  background-color: white;
+  border: solid 1px #BEC2C5;
+  background-color: #FFFFFF;
 }
 
-td.block-type-red {
-  background-color: #ff0000;
+td.block-type-core {
+  background-color: #FF0000;
   border-top: 1px #ffffff solid;
   border-left: 1px #ffffff solid;
   border-right: 1px #800000 solid;
@@ -35,7 +35,7 @@ td.block-type-red {
 }
 
 td.block-color-black {
-  background-color: #111111;
+  background-color: #003061;
   border-top: 1px #ffffff solid;
   border-left: 1px #ffffff solid;
   border-right: 1px #000000 solid;

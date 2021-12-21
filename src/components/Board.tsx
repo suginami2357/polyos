@@ -1,28 +1,36 @@
-import { BoardType } from "../types";
-import { AnyCells } from "../libs/cell";
+import React from 'react';
+import { forwardRef } from "react";
+import * as _types from "../types";
+import * as _cell from "../libs/cell";
+import * as _brock from "../libs/brock";
 
-const Board = ({board, brock} : BoardType) => {  
-  let brockCells = AnyCells(brock);
+const Board = forwardRef(({fixed, falling} : _types.BoardType, ref : React.Ref<HTMLTableCellElement>) => {
   return(
-    <table className="board-table">
-      <tbody>
-        {board.map((row, index) => {
-          return (
-            <tr key={index}>
-              {row.map((boardCell, index) => {
-                let brockCell = brockCells.find(x => x.Row == boardCell.Row && x.Column == boardCell.Column);
-                if(brockCell === undefined){
-                  return (<td key={index} className={boardCell.ClassName}></td>)
-                } else{
-                  return (<td key={index} className={brockCell.ClassName}></td>);
-                }
-              })}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <div>
+      <table className="board-table">
+        <tbody>
+          {fixed.map((row, r) => {
+            if(r > 2){
+              return (
+                <tr key={r}>
+                  {row.map((_, c) => {
+                    let cell = _cell.AnyCells(falling).find(x => x.row === r && x.column === c);
+                    if(cell === undefined){
+                      return (<td key={c} className={fixed[r][c].className}></td>);
+                    } else if(cell.Core()){
+                      return (<td ref={ref} key={c} className={cell.className}></td>)
+                    } else{
+                      return (<td key={c} className={cell.className}></td>)
+                    }
+                  })}
+                </tr>
+              );
+            }
+          })}
+        </tbody>
+      </table>
+    </div>
   );
-};
+});
 
 export default Board;
