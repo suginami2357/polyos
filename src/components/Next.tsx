@@ -1,8 +1,7 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { NextType } from "../types";
+import React from "react";
+import * as types from "../types";
 
-const Next = ({next}: NextType) => {
+const Next = ({next}: types.NextType) => {
   return(
     <div>
       <table className="board-table">
@@ -11,9 +10,7 @@ const Next = ({next}: NextType) => {
             return (
               <tr key={index}>
                 {row.map((cell, index) => {
-                  return(
-                    <td key={index} className={cell.className}></td>
-                  );
+                  return(<td key={index} className={cell}></td>);
                 })}
               </tr>
             );

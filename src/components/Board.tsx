@@ -1,26 +1,20 @@
-import React from 'react';
-import { forwardRef } from "react";
-import * as _types from "../types";
-import * as _cell from "../libs/cell";
-import * as _brock from "../libs/brock";
+import React, { forwardRef } from 'react';
+import * as types from "../types";
 
-const Board = forwardRef(({fixed, falling} : _types.BoardType, ref : React.Ref<HTMLTableCellElement>) => {
+const Board = forwardRef(({board}: types.BoardType, ref : React.Ref<HTMLTableCellElement>) => {
   return(
     <div>
       <table className="board-table">
         <tbody>
-          {fixed.map((row, r) => {
-            if(r > 2){
+          {board.map((row, r) => {
+            if(r > 1){
               return (
                 <tr key={r}>
-                  {row.map((_, c) => {
-                    let cell = _cell.AnyCells(falling).find(x => x.row === r && x.column === c);
-                    if(cell === undefined){
-                      return (<td key={c} className={fixed[r][c].className}></td>);
-                    } else if(cell.Core()){
-                      return (<td ref={ref} key={c} className={cell.className}></td>)
+                  {row.map((cell, c) => {
+                    if(cell === "brock-activate-center"){
+                      return(<td key={c} className={board[r][c]} ref={ref}></td>);
                     } else{
-                      return (<td key={c} className={cell.className}></td>)
+                      return(<td key={c} className={board[r][c]}></td>);
                     }
                   })}
                 </tr>
