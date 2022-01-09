@@ -20,7 +20,7 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
         around: "activate-around",
       },
       fixed: {
-        height: 18,
+        height: 17,
         width: 11,
         center: "fixed-center",
         around: "fixed-around",
