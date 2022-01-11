@@ -20,7 +20,7 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
         around: "activate-around",
       },
       fixed: {
-        height: 17,
+        height: 22,
         width: 11,
         center: "fixed-center",
         around: "fixed-around",
@@ -169,9 +169,9 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
           }
         }
 
-    let value = Add([...Array(BOARD.type.fixed.height)].map(() => Array(BOARD.type.fixed.width).fill(BOARD.type.none)), New(score));
+    let value = Add([...Array(BOARD.type.fixed.height)].map(() => Array(BOARD.type.fixed.width).fill(BOARD.type.none)), New(0));
     setBoard(value);
-    setNext(New(0));
+    setNext(New(10));
     setStep(0);
   }
 
@@ -351,7 +351,7 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     brock[cell.row][cell.column] = BOARD.type.activate.center;
 
     //ブロックサイズを設定
-    let max = 5 + (score / 10);
+    let max = 4 + (score / 10);
     let length = number.Random(4, max);
 
     for(let i = 1; i < length; i++){
