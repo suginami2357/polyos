@@ -3,7 +3,7 @@
 }
 
 .board-container table {
-  margin: 0 auto;
+  margin: auto;
   border-collapse: separate;
   border-spacing: 0;
 }

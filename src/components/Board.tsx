@@ -3,10 +3,10 @@ import './Board.css';
 import * as types from "../types";
 
 const Board = forwardRef(({board}: types.BoardType, ref : React.Ref<HTMLTableCellElement>) => {
-  let size = window.innerHeight / board.length < 30 ? window.innerHeight / board.length : 30;
+  let size = 25;
   if(board.length !== 0){
-    let width = (window.innerWidth * 0.8) / board[0].length;
-    let height = (window.innerHeight * 0.8) / board.length;
+    let width = ((window.innerWidth * 0.8) - (board[0].length) * 4) / board[0].length;
+    let height = ((window.innerHeight * 0.8) - (board.length) * 4) / board.length;
     size = width < height ? width : height;
   }
 

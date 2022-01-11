@@ -3,10 +3,10 @@ import './Next.css';
 import * as types from "../types";
 
 const Next = ({next}: types.NextType) => {
-  let size = window.innerHeight / next.length < 30 ? window.innerHeight / next.length : 15;
+  let size = 15;
   if(next.length !== 0){
-    let width = (window.innerWidth * 0.2) / next[0].length;
-    let height = (window.innerHeight * 0.2) / next.length;
+    let width = ((window.innerWidth * 0.2) - (next[0].length * 4)) / next[0].length;
+    let height = ((window.innerHeight * 0.2) - (next.length * 4)) / next.length;
     size = width < height ? width : height;
   }
 
