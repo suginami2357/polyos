@@ -10,7 +10,6 @@ export type GameType = {
   setBoard: React.Dispatch<React.SetStateAction<string[][]>>,
   next: string[][],
   setNext: React.Dispatch<React.SetStateAction<string[][]>>,
-  ref: React.Ref<HTMLTableCellElement>,
 }
 
 export type BoardType = {

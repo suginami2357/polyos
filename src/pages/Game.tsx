@@ -1,10 +1,10 @@
-import React, { useEffect, forwardRef, useRef } from 'react';
-import Next from "../components/Next";
-import Score from "../components/Score";
+import React, { useEffect, useRef } from 'react';
 import './Game.css';
+import Score from "../components/Score";
+import Next from "../components/Next";
+import Board from '../components/Board';
 import * as types from "../types";
 import * as number from "../libs/number";
-import Board from '../components/Board';
 
 const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score, setScore, board, setBoard, next, setNext}: types.GameType)=> {
 
@@ -40,9 +40,11 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
         result = Fall(result);
       } else{
 
+        //ゲームオーバー判定
         if(GameOver(result)){
           alert("SCORE: " + score);
-          window.location.reload();
+          Initialize();
+          return;
         }
 
         //ブロック固定
@@ -76,55 +78,46 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
   }, [step])
 
   useEffect(() => {
-    window.KeyDown = {};
-        window.Swipe = {
-          isMove: false, 
-          X: 0,
-          Y: 0,
-        }
-
-    let initial = Add([...Array(BOARD.type.fixed.height)].map(() => Array(BOARD.type.fixed.width).fill(BOARD.type.none)), New(score));
-    setBoard(initial);
-    setNext(New(score));
+    Initialize();
   }, [])
 
 //---タッチスクリーン---
   window.ontouchstart = (e) => {
     e.preventDefault();
-    window.Swipe.X = e.touches[0].pageX;
-    window.Swipe.Y = e.touches[0].pageY;
+    window.swipe.start.x = e.touches[0].pageX;
+    window.swipe.start.y = e.touches[0].pageY;
   }
 
-  window.ontouchmove = (e) => {
+   window.ontouchmove = (e) => {
     e.preventDefault();
-    window.Swipe.isMove = true;
-    let touch = e.touches[0];
+    window.swipe.activate = true;
+    window.swipe.curent.x = e.touches[0].pageX;
+    window.swipe.curent.y = e.touches[0].pageY;
     
     if(ref.current === null){
       return;
     }
-
-    let leftBorder = ref.current.offsetLeft;
-    let rightBorder = ref.current.offsetLeft + ref.current.offsetWidth;
+    let origin = window.swipe.curent.x - window.swipe.start.x;
+    let margin = ref.current.offsetWidth * 0.75;
 
     //左にスワイプ
-    if(touch.pageX < leftBorder){
-      setAccelerate(false);
+    if(origin < -margin){
       setBoard(x => MoveLeft(x));
-      window.Swipe.Y = touch.pageY;
+      setAccelerate(false);
+      window.swipe.start = {x: window.swipe.curent.x, y: window.swipe.curent.y};
       return;
     } 
 
     //右にスワイプ
-    if(touch.pageX > rightBorder){
-      setAccelerate(false);
+    if(origin > margin){
       setBoard(x => MoveRight(x));
-      window.Swipe.Y = touch.pageY;
+      setAccelerate(false);
+      window.swipe.start = {x: window.swipe.curent.x, y: window.swipe.curent.y};
       return;
     }
 
     //下にスワイプ
-    if(touch.pageY - 3 > window.Swipe.Y){
+    if(window.swipe.curent.y > window.swipe.start.y + 3){
       setAccelerate(true);
       return;
     }
@@ -134,10 +127,10 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     e.preventDefault();
 
     setAccelerate(false);
-    if(!window.Swipe.isMove){
+    if(!window.swipe.activate){
       setBoard(x => Rotate(x));
     }
-    window.Swipe.isMove = false;
+    window.swipe.activate = false;
   }
 //--------------------
 
@@ -161,6 +154,26 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     setAccelerate(false);
   }
 //--------------------
+
+  const Initialize = () => {
+    window.KeyDown = {};
+        window.swipe = {
+          activate: false, 
+          start: {
+            x: 0,
+            y: 0,
+          },
+          curent: {
+           x: 0,
+           y: 0,
+          }
+        }
+
+    let value = Add([...Array(BOARD.type.fixed.height)].map(() => Array(BOARD.type.fixed.width).fill(BOARD.type.none)), New(score));
+    setBoard(value);
+    setNext(New(0));
+    setStep(0);
+  }
 
   const MoveLeft = (board: string[][]): string[][] => {
     let result = board.map((x)=> Array.from(x));
@@ -373,16 +386,21 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     }
     return brock;
   }
+  
   return(
-    <div className="wrapper-container">
-    <span className="polyos-container">
-      <Board board={board} ref={ref}/>
-        <span className="polyos-panel-container">
+    <div className="wrapper">
+      <div className="header-wrapper">
+        <div className='score'>
           <Score score={score}/>
+        </div>
+        <div>
           <Next next={next}/>
-      </span>
-    </span>
-  </div>
+        </div>
+      </div>
+      <div className="body-wrapper">
+        <Board board={board} ref={ref}/>
+      </div>
+    </div>
   );
 });
 
