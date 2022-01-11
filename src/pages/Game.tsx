@@ -70,7 +70,7 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
       setBoard(result);
 
       //ブロックの落下速度
-      let time = accelerate ? 50 : Math.max(100, 500 - (score * 5));
+      let time = accelerate ? 50 : Math.max(100, 1000 - (score * 10));
       await new Promise(r => setTimeout(r, time));
 
       setStep(step + 1);
