@@ -5,8 +5,8 @@ import * as types from "../types";
 const Board = forwardRef(({value}: types.BoardType, ref : React.Ref<HTMLTableCellElement>) => {
   let size = 25;
   if(value.length !== 0){
-    let width = (window.innerWidth * 0.75) / value[0].length;
-    let height = (window.innerHeight * 0.75) / value.length;
+    let width = (window.innerWidth * 0.72) / value[0].length;
+    let height = (window.innerHeight * 0.72) / value.length;
     size = Math.min(width, height);
   }
 
