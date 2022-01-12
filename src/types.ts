@@ -10,17 +10,23 @@ export type GameType = {
   setBoard: React.Dispatch<React.SetStateAction<string[][]>>,
   next: string[][],
   setNext: React.Dispatch<React.SetStateAction<string[][]>>,
-}
-
-export type BoardType = {
-  board: string[][],
-}
-
-export type NextType = {
-  next: string[][],
+  hold: string[][],
+  setHold: React.Dispatch<React.SetStateAction<string[][]>>, 
 }
 
 export type ScoreType = {
-  score: number,
+  value: number,
+}
+
+export type BoardType = {
+  value: string[][],
+}
+
+export type NextType = {
+  value: string[][],
+}
+
+export type HoldType = {
+  value: string[][]
 }
 

@@ -1,5 +1,16 @@
 .score-container {
   display: flex;
-  height: 100%;
-  align-items: flex-end;
+  flex-direction: column;
+  margin-top: 25px;
 }
+
+.score-title {
+  font-size: 15px;
+  margin: 5px 0 0 0;
+}
+
+.score-value {
+  font-size: 15px;
+  margin: 5px 0 0 0;
+}
+

@@ -7,6 +7,7 @@ function App() {
   const[score, setScore] = useState<number>(0);
   const[board, setBoard] = useState<string[][]>([]);
   const[next, setNext] = useState<string[][]>([]);
+  const[hold, setHold] = useState<string[][]>([]);
 
   return (
     <div className="App">
@@ -18,6 +19,7 @@ function App() {
           score={score} setScore={setScore}
           board={board} setBoard={setBoard}
           next={next} setNext={setNext}
+          hold={hold} setHold={setHold}
         />
     </div>
   );

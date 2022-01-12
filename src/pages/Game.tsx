@@ -5,9 +5,9 @@ import Next from "../components/Next";
 import Board from '../components/Board';
 import * as types from "../types";
 import * as number from "../libs/number";
+import Hold from '../components/Hold';
 
-const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score, setScore, board, setBoard, next, setNext}: types.GameType)=> {
-
+const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score, setScore, board, setBoard, next, setNext, hold, setHold}: types.GameType)=> {
   const ref = useRef<HTMLTableCellElement>(null)
 
   const BOARD = {
@@ -70,7 +70,7 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
       setBoard(result);
 
       //ブロックの落下速度
-      let time = accelerate ? 50 : Math.max(100, 800 - (score * 10));
+      let time = accelerate ? 25 : Math.max(100, 800 - (score * 10));
       await new Promise(r => setTimeout(r, time));
 
       setStep(step + 1);
@@ -169,9 +169,10 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
           }
         }
 
-    let value = Add([...Array(BOARD.type.fixed.height)].map(() => Array(BOARD.type.fixed.width).fill(BOARD.type.none)), New(0));
-    setBoard(value);
-    setNext(New(10));
+    setScore(0);
+    setBoard(Add([...Array(BOARD.type.fixed.height)].map(() => Array(BOARD.type.fixed.width).fill(BOARD.type.none)), New(20)));
+    setNext(New(0));
+    setHold([...Array(BOARD.type.activate.height)].map(() => Array(BOARD.type.activate.width).fill(BOARD.type.none)))
     setStep(0);
   }
 
@@ -351,10 +352,10 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     brock[cell.row][cell.column] = BOARD.type.activate.center;
 
     //ブロックサイズを設定
-    let max = 4 + (score / 10);
+    let max = 4 + (score / 20);
     let length = number.Random(4, max);
 
-    for(let i = 1; i < length; i++){
+    for(let i = 0; i < length - 1; i++){
       //移動先を設定（上下左右）
       let choices: {row: number, column: number}[] = [];
       if(0 < cell.row){choices.push({row: cell.row - 1, column: cell.column})};
@@ -390,15 +391,12 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
   return(
     <div className="wrapper">
       <div className="header-wrapper">
-        <div className='score'>
-          <Score score={score}/>
-        </div>
-        <div>
-          <Next next={next}/>
-        </div>
+        <Hold value={hold} />
+        <Score value={score}/>
+        <Next value={next}/>
       </div>
       <div className="body-wrapper">
-        <Board board={board} ref={ref}/>
+        <Board value={board} ref={ref}/>
       </div>
     </div>
   );

@@ -1,18 +1,18 @@
-.next-container {
+.hold-container {
   margin-top: 5px;
 }
 
-.next-container p {
+.hold-container p {
   font-size: 12px;
   margin: 0;
 }
 
-.next-container table {
+.hold-container table {
   border-collapse: separate;
   border-spacing: 0;
 }
 
-.next-container td {
-  border: solid 1px #cdd1d4;
+.hold-container td {
+  border: solid 1px #BEC2C5;
   background-color: #FFFFFF;
 }

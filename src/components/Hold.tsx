@@ -1,8 +1,8 @@
 import React from "react";
-import './Next.css';
+import './Hold.css';
 import * as types from "../types";
 
-const Next = ({value}: types.NextType) => {
+const Hold = ({value}: types.NextType) => {
   let size = 10;
   if(value.length !== 0){
     let width = (window.innerWidth * 0.15) / value[0].length;
@@ -11,8 +11,8 @@ const Next = ({value}: types.NextType) => {
   }
 
   return(
-    <div className='next-container'>
-      <p>Next</p>
+    <div className='hold-container'>
+      <p>Hold</p>
       <table>
         <tbody>
           {value.map((row, index) => {
@@ -30,4 +30,4 @@ const Next = ({value}: types.NextType) => {
   );
 };
 
-export default Next;
+export default Hold;
