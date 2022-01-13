@@ -1,5 +1,5 @@
 html {
-  /*ダブルタップによるズームを抑止*/
+  /*ダブルタップによるズームを抑制*/
   touch-action: manipulation;
 }
 
@@ -8,7 +8,23 @@ html {
   background-color: #333333;
 }
 
-.wrapper td.activate-center {
+.wrapper td.center {
+  background-color: #FF0000;
+  border-top    : 1px #ffffff solid;
+  border-left   : 1px #ffffff solid;
+  border-right  : 1px #800000 solid;
+  border-bottom : 1px #800000 solid;
+}
+
+.wrapper td.around {
+  background-color: #003061;
+  border-top    : 1px #ffffff solid;
+  border-left   : 1px #ffffff solid;
+  border-right  : 1px #000000 solid;
+  border-bottom : 1px #000000 solid;
+}
+
+/* .wrapper td.activate-center {
   background-color: #FF0000;
   border-top    : 1px #ffffff solid;
   border-left   : 1px #ffffff solid;
@@ -22,9 +38,9 @@ html {
   border-left   : 1px #ffffff solid;
   border-right  : 1px #000000 solid;
   border-bottom : 1px #000000 solid;
-}
+} */
 
-.wrapper td.fixed-center {
+/* .wrapper td.fixed-center {
   background-color: #FF0000;
   border-top    : 1px #ffffff solid;
   border-left   : 1px #ffffff solid;
@@ -38,7 +54,7 @@ html {
   border-left   : 1px #ffffff solid;
   border-right  : 1px #000000 solid;
   border-bottom : 1px #000000 solid;
-}
+} */
 
 .header-wrapper {
   display: flex;

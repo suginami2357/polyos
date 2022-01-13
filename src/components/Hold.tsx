@@ -1,12 +1,14 @@
 import React from "react";
 import './Hold.css';
 import * as types from "../types";
+import * as constants from "../constants";
 
-const Hold = ({value}: types.NextType) => {
+const Hold = ({value}: types.HoldType) => {
+  let origin = Math.ceil((constants.Fixed.width - constants.Active.width) / 2);
   let size = 10;
   if(value.length !== 0){
-    let width = (window.innerWidth * 0.15) / value[0].length;
-    let height = (window.innerHeight * 0.15) / value.length;
+    let width = (window.innerWidth * 0.15) / constants.Active.width;
+    let height = (window.innerHeight * 0.15) / constants.Active.height;
     size = Math.min(width, height);
   }
 
@@ -15,14 +17,18 @@ const Hold = ({value}: types.NextType) => {
       <p>Hold</p>
       <table>
         <tbody>
-          {value.map((row, index) => {
-            return (
-              <tr key={index}>
-                {row.map((cell, index) => {
-                  return(<td key={index} className={cell} style={{width: size, height: size}}></td>);
-                })}
-              </tr>
-            );
+          {value.map((line, r) => {
+            if(r < constants.Active.height){
+              return (
+                <tr key={r}>
+                  {line.map((cell, c) => {
+                    if(origin <= c && c < origin + constants.Active.width){
+                      return(<td key={c} className={cell} style={{width: size, height: size}}></td>);
+                    }
+                  })}
+                </tr>
+              );
+            }
           })}
         </tbody>
       </table>

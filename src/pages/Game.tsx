@@ -4,51 +4,32 @@ import Score from "../components/Score";
 import Next from "../components/Next";
 import Board from '../components/Board';
 import * as types from "../types";
+import * as constants from "../constants";
 import * as number from "../libs/number";
 import Hold from '../components/Hold';
+import { idText } from 'typescript';
 
-const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score, setScore, board, setBoard, next, setNext, hold, setHold}: types.GameType)=> {
+const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score, setScore, active, setActive, fixed, setFixed, next, setNext, hold, setHold, isHold, setIsHold}: types.GameType)=> {
   const ref = useRef<HTMLTableCellElement>(null)
-
-  const BOARD = {
-    type: {
-      none: "none",
-      activate: {
-        height: 5,
-        width: 5,
-        center: "activate-center",
-        around: "activate-around",
-      },
-      fixed: {
-        height: 22,
-        width: 11,
-        center: "fixed-center",
-        around: "fixed-around",
-      }
-    }
-  } as const;
 
   useEffect(() => {
     (async() => {
-      //処理結果
-      let result = board;
-
       //接触判定
-      if(!Collision(result)){
+      if(!Collision(active, fixed)){
 
         //ブロック落下
-        result = Fall(result);
+        setActive(x => Fall(x));
       } else{
 
         //ゲームオーバー判定
-        if(GameOver(result)){
+        if(active.length > 0 && GameOver(active)){
           alert("SCORE: " + score);
           Initialize();
           return;
         }
 
         //ブロック固定
-        result = Fix(result);
+        let result = Marge(active, fixed);
 
         //スコア計算
         let count = Count(result);
@@ -57,17 +38,19 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
         //ブロック削除
         result = Delete(result);
 
-        //次ブロック追加
-        result = Add(result, next);
+        //盤面を更新
+        setFixed(result);
+        setActive(next);
 
         //ブロック作成
         setNext(New(score));
 
+        //ホールド許可
+        setIsHold(false);
+
+        //加速を中止
         setAccelerate(false);
       }
-
-      //盤面を更新
-      setBoard(result);
 
       //ブロックの落下速度
       let time = accelerate ? 25 : Math.max(100, 800 - (score * 10));
@@ -100,9 +83,15 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     let origin = window.swipe.curent.x - window.swipe.start.x;
     let margin = ref.current.offsetWidth * 0.75;
 
+    //上にスワイプ
+    if(window.swipe.curent.y < window.swipe.start.y - 20){
+      Exchange();
+      return;
+    }
+
     //左にスワイプ
     if(origin < -margin){
-      setBoard(x => MoveLeft(x));
+      setActive(x => MoveLeft(x, fixed));
       setAccelerate(false);
       window.swipe.start = {x: window.swipe.curent.x, y: window.swipe.curent.y};
       return;
@@ -110,14 +99,14 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
 
     //右にスワイプ
     if(origin > margin){
-      setBoard(x => MoveRight(x));
+      setActive(x => MoveRight(x, fixed));
       setAccelerate(false);
       window.swipe.start = {x: window.swipe.curent.x, y: window.swipe.curent.y};
       return;
     }
 
     //下にスワイプ
-    if(window.swipe.curent.y > window.swipe.start.y + 3){
+    if(window.swipe.curent.y > window.swipe.start.y + 5){
       setAccelerate(true);
       return;
     }
@@ -128,7 +117,7 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
 
     setAccelerate(false);
     if(!window.swipe.activate){
-      setBoard(x => Rotate(x));
+      setActive(x => Rotate(x, fixed));
     }
     window.swipe.activate = false;
   }
@@ -142,10 +131,11 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     window.KeyDown[e.key] = true;
     
     switch (e.key) {
-      case 'ArrowUp'    : setBoard(x => Rotate(x));     break;
-      case 'ArrowDown'  : setAccelerate(true);          break;
-      case 'ArrowLeft'  : setBoard(x => MoveLeft(x));   break;
-      case 'ArrowRight' : setBoard(x => MoveRight(x));  break;
+      case 'Enter'      : Exchange();                               break;
+      case 'ArrowUp'    : setActive(x => Rotate(x, fixed));     break;
+      case 'ArrowDown'  : setAccelerate(true);                  break;
+      case 'ArrowLeft'  : setActive(x => MoveLeft(x, fixed));   break;
+      case 'ArrowRight' : setActive(x => MoveRight(x, fixed));  break;
     }
   }
 
@@ -170,98 +160,129 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
         }
 
     setScore(0);
-    setBoard(Add([...Array(BOARD.type.fixed.height)].map(() => Array(BOARD.type.fixed.width).fill(BOARD.type.none)), New(20)));
+    setActive(New(20));
+    setFixed([...Array(constants.Fixed.height)].map(() => Array(constants.Fixed.width).fill(constants.State.none)));
     setNext(New(0));
-    setHold([...Array(BOARD.type.activate.height)].map(() => Array(BOARD.type.activate.width).fill(BOARD.type.none)))
+    setHold([...Array(constants.Fixed.height)].map(() => Array(constants.Fixed.width).fill(constants.State.none)))
+    setIsHold(false);
     setStep(0);
   }
 
-  const MoveLeft = (board: string[][]): string[][] => {
-    let result = board.map((x)=> Array.from(x));
-    for(let r = 0; r < board.length; r++){
-      for(let c = 0; c < board[r].length; c++){
-        if(board[r][c] !== BOARD.type.activate.center && board[r][c] !== BOARD.type.activate.around){
+  const MoveLeft = (active: string[][], fiexed: string[][]): string[][] => {
+    let result = active.map(x => Array.from(x));
+    for(let r = 0; r < active.length; r++){
+      for(let c = 0; c < active[r].length; c++){
+        if(active[r][c] === constants.State.none){
           continue;
         }
 
-        if(c === 0){
-          return board;
+        if(c === 0 || fiexed[r][c - 1] !== constants.State.none){
+          return active;
         }
-        if(board[r][c - 1] === BOARD.type.fixed.center || board[r][c - 1] === BOARD.type.fixed.around){
-          return board;
-        }
-        result[r][c - 1] = board[r][c];
-        result[r][c] = BOARD.type.none;
+        result[r][c - 1] = active[r][c];
+        result[r][c] = constants.State.none;
       }
     }
     return result;
   }
 
-  const MoveRight = (board: string[][]): string[][] => {
-    let result = board.map((x)=> Array.from(x));
-    for(let r = 0; r < board.length; r++){
-      for(let c = board[r].length - 1; c >= 0; c--){
-        if(board[r][c] !== BOARD.type.activate.center && board[r][c] !== BOARD.type.activate.around){
+  const MoveRight = (active: string[][], fixed: string[][]): string[][] => {
+    let result = active.map(x => Array.from(x));
+    for(let r = 0; r < active.length; r++){
+      for(let c = active[r].length - 1; c >= 0; c--){
+        if(active[r][c] === constants.State.none){
           continue;
         }
 
-        if(c === (BOARD.type.fixed.width - 1)){
-          return board;
+        if(c === (constants.Fixed.width - 1) || fixed[r][c + 1] !== constants.State.none){
+          return active;
         }
-        if(board[r][c + 1] === BOARD.type.fixed.center || board[r][c + 1] === BOARD.type.fixed.around){
-          return board;
-        }
-        result[r][c + 1] = board[r][c];
-        result[r][c] = BOARD.type.none;
+        result[r][c + 1] = active[r][c];
+        result[r][c] = constants.State.none;
      }
     }
     return result;
   }
 
-  const Rotate = (board: string[][]): string[][] => {
+  const Rotate = (active: string[][], fixed: string[][]): string[][] => {
     let center = {row: 0, column: 0};
-    board.map((x)=> Array.from(x)).forEach((line, r) => line.forEach((cell, c) => { if(cell === BOARD.type.activate.center){ center = {row: r, column: c}; }}));
-    let result = board.map((x)=> Array.from(x));
-    let brock = [];
-    for(let r = 0; r < board.length; r++){
-      for(let c = 0; c < board[r].length; c++){
-        if(board[r][c] !== BOARD.type.activate.around){
+    active.map(x => Array.from(x)).forEach((line, r) => line.forEach((cell, c) => { if(cell === constants.State.center){ center = {row: r, column: c}; }}));
+    let result = active.map((x)=> Array.from(x));
+    let temp = [];
+    for(let r = 0; r < active.length; r++){
+      for(let c = 0; c < active[r].length; c++){
+        if(active[r][c] !== "around"){
           continue;
         }
         let row = center.row + (c - center.column);
         let column = center.column - (r - center.row);
 
-        if(row < 0 || board.length <= row){
-          return board;
+        //回転すると縦にはみ出す場合
+        if(row < 0 || active.length <= row){
+          return active;
         }
-        if(column < 0 || board[r].length <= column){
-          return board;
+        //回転すると横にはみ出す場合
+        if(column < 0 || active[r].length <= column){
+          return active;
         }
-        if(board[row][column] === BOARD.type.fixed.center || board[row][column] === BOARD.type.fixed.around){
-          return board;
+        //回転すると他のブロックに接触する場合
+        if(fixed[row][column] !== constants.State.none){
+          return active;
         }
-        result[r][c] = BOARD.type.none;
-        brock.push({row: row, column: column});
+        result[r][c] = constants.State.none;
+        temp.push({row: row, column: column});
       }
     }
-    brock.forEach(x => result[x.row][x.column] = BOARD.type.activate.around);
+    temp.forEach(x => result[x.row][x.column] = constants.State.around);
     return result;
   }
 
-  const Collision = (board: string[][]): boolean => {
-    for(let r = 0; r < board.length; r++){
-      for(let c = 0; c < board[r].length; c++){
-        if(board[r][c] !== BOARD.type.activate.center && board[r][c] !== BOARD.type.activate.around){
+  const Exchange = (): void => {
+    if(isHold){
+      return;
+    }
+    setIsHold(true);
+
+    let origin = {row: 2, column: 2 + Math.ceil((constants.Fixed.width - constants.Active.width) / 2)};
+    let center = {row: 0, column: 0};
+    let value = active.map((x)=> Array.from(x));
+    value.map(x => Array.from(x)).forEach((line, r) => line.forEach((cell, c) => { if(cell === constants.State.center){ center = {row: r, column: c}; }}));
+    let result = [...Array(constants.Fixed.height)].map(() => Array(constants.Fixed.width).fill(constants.State.none));
+    for(let r = 0; r < value.length; r++){
+      for(let c = 0; c < value[r].length; c++){
+        if(value[r][c] === constants.State.none){
+          continue;
+        }
+        let row = r + (origin.row - center.row);
+        let column = c + (origin.column - center.column);
+        result[row][column] = value[r][c];
+      }
+    }
+
+    if(hold.flat().some(x => x !== constants.State.none)){
+      setHold(result);
+      setActive(hold);
+    } else {
+      setHold(result);
+      setActive(next);
+      setNext(New(score));
+    }
+  }
+
+  const Collision = (active: string[][], fixed: string[][]): boolean => {
+    for(let r = 0; r < active.length; r++){
+      for(let c = 0; c < active[r].length; c++){
+        if(active[r][c] === constants.State.none){
           continue;
         }
 
         //落下ブロックが一番下に存在
-        if(r === (BOARD.type.fixed.height - 1)){
+        if(r === constants.Fixed.height - 1){
           return true;
         }
 
-        //落下ブロックの下に固定ブロックが存在
-        if(board[r + 1][c] === BOARD.type.fixed.center || board[r + 1][c] === BOARD.type.fixed.around){
+        //ブロック同士が接触する
+        if(fixed[r + 1][c] !== constants.State.none){
           return true;
         }
       }
@@ -269,87 +290,64 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     return false;
   }
 
-  const GameOver = (board: string[][]) :boolean => {
-    let column = 2 + Math.ceil((BOARD.type.fixed.width - BOARD.type.activate.width) / 2);
-    let result = (board[2][column] === BOARD.type.activate.center);
+  const GameOver = (active: string[][]) :boolean => {
+    let column = 2 + Math.ceil((constants.Fixed.width - constants.Active.width) / 2);
+    let result = (active[2][column] === constants.State.center);
     return result;
   }
 
-  const Fall = (board: string[][]): string[][] => {
-    let result = board.map((x)=> Array.from(x));
-    for(let r = board.length - 1; r >= 0; r--){
-      for(let c = 0; c < board[r].length; c++){
-        if(board[r][c] === BOARD.type.activate.center || board[r][c] === BOARD.type.activate.around){
-          result[r + 1][c] = board[r][c];
-          result[r][c] = BOARD.type.none;
+  const Fall = (value: string[][]): string[][] => {
+    let result = value.map(x => Array.from(x));
+    for(let r = value.length - 1; r >= 0; r--){
+      for(let c = 0; c < value[r].length; c++){
+        if(value[r][c] !== constants.State.none){
+          result[r + 1][c] = value[r][c];
+          result[r][c] = constants.State.none;
         }
       }
     }
     return result;
   }
   
-  const Fix = (board: string[][]): string[][] => {
-    let result = board.map((x)=> Array.from(x));
-    for(let r = 0; r < board.length; r++){
-      for(let c = 0; c < board[r].length; c++){
-        if(board[r][c] === BOARD.type.activate.center){
-          result[r][c] = BOARD.type.fixed.center;
-        }
-        if(board[r][c] === BOARD.type.activate.around){
-          result[r][c] = BOARD.type.fixed.around;
+  const Marge = (active: string[][], fixed: string[][]): string[][] => {
+    let result = fixed.map(x => Array.from(x));
+    for(let r = 0; r < active.length; r++){
+      for(let c = 0; c < active[r].length; c++){
+        if(active[r][c] !== constants.State.none){
+          result[r][c] = active[r][c];
         }
       }
     }
     return result;
   }
 
-  const Count = (board: string[][]): number => {
+  const Count = (value: string[][]): number => {
     let result = 0;
-    for(let row = 0; row < board.length; row++){
-      if(board[row].every(cell => cell !== BOARD.type.none)){
+    for(let row = 0; row < value.length; row++){
+      if(value[row].every(cell => cell !== constants.State.none)){
         result++;
       }
     }
     return result;
   }
 
-  const Delete = (board: string[][]): string[][] => {
-    let result = board.map((x)=> Array.from(x));
-    for(let row = board.length - 1; row >= 0; row--){
-      if(board[row].every(cell => cell !== BOARD.type.none)){
+  const Delete = (value: string[][]): string[][] => {
+    let result = value.map(x => Array.from(x));
+    for(let row = value.length - 1; row >= 0; row--){
+      if(value[row].every(cell => cell !== constants.State.none)){
         result.splice(row, 1);
-        result.unshift(Array(board[row].length).fill(BOARD.type.none));
-      }
-    }
-    return result;
-  }
-
-  const Add = (board: string[][], brock: string[][]): string[][] => {
-    let result = board.map((x)=> Array.from(x));
-    for(let r = 0; r < brock.length; r++){
-      for(let c = 0; c < brock[r].length; c++){
-        let cell = brock[r][c];
-        if(cell === BOARD.type.none){
-          continue;
-        }
-
-        let index = c + Math.ceil((BOARD.type.fixed.width - BOARD.type.activate.width) / 2);
-        if(r === 2 && c === 2){
-          result[r][index] = BOARD.type.activate.center;
-        } else {
-          result[r][index] = BOARD.type.activate.around;
-        }
+        result.unshift(Array(value[row].length).fill(constants.State.none));
       }
     }
     return result;
   }
 
   const New = (score: number): string[][] => {
-    let cell = {row: 2, column: 2};
+    let origin = {row: 2, column: 2 + Math.ceil((constants.Fixed.width - constants.Active.width) / 2)};
+    let cell = {row: origin.row, column: origin.column};
 
-    //枠を生成
-    let brock = [...Array(BOARD.type.activate.height)].map(() => Array(BOARD.type.activate.width).fill(BOARD.type.none));
-    brock[cell.row][cell.column] = BOARD.type.activate.center;
+    let result = [...Array(constants.Fixed.height)].map(() => Array(constants.Fixed.width).fill(constants.State.none));
+    result[cell.row][cell.column] = constants.State.center;
 
     //ブロックサイズを設定
     let max = 4 + (score / 20);
@@ -358,17 +356,17 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     for(let i = 0; i < length - 1; i++){
       //移動先を設定（上下左右）
       let choices: {row: number, column: number}[] = [];
-      if(0 < cell.row){choices.push({row: cell.row - 1, column: cell.column})};
-      if(0 < cell.column){choices.push({row: cell.row, column: cell.column - 1})}
-      if(cell.row < 4){choices.push({row: cell.row + 1, column: cell.column})}
-      if(cell.column < 4){choices.push({row: cell.row, column: cell.column + 1})}
+      if(origin.row - 2 < cell.row){choices.push({row: cell.row - 1, column: cell.column})};
+      if(origin.column - 2 < cell.column){choices.push({row: cell.row, column: cell.column - 1})}
+      if(cell.row < origin.row + 2){choices.push({row: cell.row + 1, column: cell.column})}
+      if(cell.column < origin.column + 2){choices.push({row: cell.row, column: cell.column + 1})}
       
       //既に移動したセルを除外
-      choices = choices.filter(x => brock[x.row][x.column] === BOARD.type.none);
+      choices = choices.filter(x => result[x.row][x.column] === constants.State.none);
 
       //移動先が無ければ終了
       if (choices.length == 0){
-        return brock;
+        return result;
       }
 
       //移動先を決定
@@ -376,27 +374,27 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
 
       //真ん中に戻す
       if(index == choices.length){
-        cell = {row : 2, column: 2};
+        cell = {row : origin.row, column: origin.column};
         i--;
       } 
       //移動先の色を塗る
       else {
       cell = choices[index];
-      brock[cell.row][cell.column] = BOARD.type.activate.around;
+      result[cell.row][cell.column] = constants.State.around;
       }
     }
-    return brock;
+    return result;
   }
   
   return(
     <div className="wrapper">
       <div className="header-wrapper">
-        <Hold value={hold} />
+        <Hold value={hold}/>
         <Score value={score}/>
         <Next value={next}/>
       </div>
       <div className="body-wrapper">
-        <Board value={board} ref={ref}/>
+        <Board active={active} fixed={fixed} ref={ref}/>
       </div>
     </div>
   );

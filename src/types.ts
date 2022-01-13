@@ -6,12 +6,16 @@ export type GameType = {
   setStep: React.Dispatch<React.SetStateAction<number>>,
   score: number,
   setScore: React.Dispatch<React.SetStateAction<number>>,
-  board: string[][],
-  setBoard: React.Dispatch<React.SetStateAction<string[][]>>,
+  active: string[][],
+  setActive: React.Dispatch<React.SetStateAction<string[][]>>,
+  fixed: string[][],
+  setFixed: React.Dispatch<React.SetStateAction<string[][]>>,
   next: string[][],
   setNext: React.Dispatch<React.SetStateAction<string[][]>>,
   hold: string[][],
-  setHold: React.Dispatch<React.SetStateAction<string[][]>>, 
+  setHold: React.Dispatch<React.SetStateAction<string[][]>>,
+  isHold: boolean,
+  setIsHold: React.Dispatch<React.SetStateAction<boolean>>,
 }
 
 export type ScoreType = {
@@ -19,7 +23,8 @@ export type ScoreType = {
 }
 
 export type BoardType = {
-  value: string[][],
+  active: string[][],
+  fixed: string[][],
 }
 
 export type NextType = {
@@ -27,6 +32,6 @@ export type NextType = {
 }
 
 export type HoldType = {
-  value: string[][]
+  value: string[][],
 }
 
