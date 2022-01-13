@@ -31,7 +31,7 @@ const Board = forwardRef(({active, fixed}: types.BoardType, ref : React.Ref<HTML
               return (
                 <tr key={r}>
                   {line.map((cell, c) => {
-                    if(cell === "activate-center"){
+                    if(cell === constants.State.center){
                       return(<td key={c} className={result[r][c]} style={{ width: size, height: size }} ref={ref}></td>);
                     } else{
                       return(<td key={c} className={result[r][c]} style={{ width: size, height: size }}></td>);
