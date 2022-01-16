@@ -17,8 +17,8 @@ const Board = forwardRef(({active, fixed}: types.BoardType, ref : React.Ref<HTML
 
   let size = 25;
   if(result.length !== 0){
-    let width = (window.innerWidth * 0.72) / result[0].length;
-    let height = (window.innerHeight * 0.72) / result.length;
+    let width = (window.innerWidth * 0.71) / result[0].length;
+    let height = (window.innerHeight * 0.71) / result.length;
     size = Math.min(width, height);
   }
 

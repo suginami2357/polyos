@@ -7,8 +7,8 @@ const Hold = ({value}: types.HoldType) => {
   let origin = Math.ceil((constants.Fixed.width - constants.Active.width) / 2);
   let size = 10;
   if(value.length !== 0){
-    let width = (window.innerWidth * 0.15) / constants.Active.width;
-    let height = (window.innerHeight * 0.15) / constants.Active.height;
+    let width = (window.innerWidth * 0.12) / constants.Active.width;
+    let height = (window.innerHeight * 0.12) / constants.Active.height;
     size = Math.min(width, height);
   }
 
