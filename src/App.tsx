@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import Game from "./pages/Game";
-import * as constants from "./constants";
 
 function App() {
+  const[timeoutId, setTimeoutId] = useState<number>(0);
   const[accelerate, setAccelerate] = useState<boolean>(false);
   const[step, setStep] = useState<number>(0);
   const[score, setScore] = useState<number>(0);
@@ -16,6 +16,8 @@ function App() {
   return (
     <div className="App">
         <Game
+          timeoutId={timeoutId}
+          setTimeoutId={setTimeoutId}
           accelerate={accelerate}
           setAccelerate={setAccelerate}
           step={step}
@@ -23,7 +25,6 @@ function App() {
           score={score} setScore={setScore}
           active={activate} setActive={setActivate}
           fixed={fixed} setFixed={setFixed}
-          // board={board} setBoard={setBoard}
           next={next} setNext={setNext}
           hold={hold} setHold={setHold}
           isHold={isHold} setIsHold={setIsHold}

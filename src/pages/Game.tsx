@@ -7,20 +7,17 @@ import * as types from "../types";
 import * as constants from "../constants";
 import * as number from "../libs/number";
 import Hold from '../components/Hold';
-import { idText } from 'typescript';
 
-const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score, setScore, active, setActive, fixed, setFixed, next, setNext, hold, setHold, isHold, setIsHold}: types.GameType)=> {
+const Game = React.forwardRef(({timeoutId, setTimeoutId,accelerate, setAccelerate, step, setStep, score, setScore, active, setActive, fixed, setFixed, next, setNext, hold, setHold, isHold, setIsHold}: types.GameType)=> {
   const ref = useRef<HTMLTableCellElement>(null)
 
   useEffect(() => {
     (async() => {
       //接触判定
       if(!Collision(active, fixed)){
-
         //ブロック落下
         setActive(x => Fall(x));
       } else{
-
         //ゲームオーバー判定
         if(active.length > 0 && GameOver(active)){
           alert("SCORE: " + score);
@@ -52,9 +49,9 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
         setAccelerate(false);
       }
 
-      //ブロックの落下速度
+      //落下の間隔
       let time = accelerate ? 25 : Math.max(100, 800 - (score * 10));
-      await new Promise(r => setTimeout(r, time));
+      await new Promise(r => {setTimeoutId(window.setTimeout(r, time))});
 
       setStep(step + 1);
     })();
@@ -84,7 +81,7 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     let margin = ref.current.offsetWidth * 0.75;
 
     //上にスワイプ
-    if(window.swipe.curent.y < window.swipe.start.y - 20){
+    if(window.swipe.curent.y < window.swipe.start.y - 50){
       Exchange();
       return;
     }
@@ -106,8 +103,8 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     }
 
     //下にスワイプ
-    if(window.swipe.curent.y > window.swipe.start.y + 5){
-      setAccelerate(true);
+    if(window.swipe.curent.y > window.swipe.start.y + 10){
+      Accelerate();
       return;
     }
   }
@@ -131,9 +128,9 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     window.KeyDown[e.key] = true;
     
     switch (e.key) {
-      case 'Enter'      : Exchange();                               break;
+      case 'Enter'      : Exchange();                           break;
       case 'ArrowUp'    : setActive(x => Rotate(x, fixed));     break;
-      case 'ArrowDown'  : setAccelerate(true);                  break;
+      case 'ArrowDown'  : Accelerate();                         break;
       case 'ArrowLeft'  : setActive(x => MoveLeft(x, fixed));   break;
       case 'ArrowRight' : setActive(x => MoveRight(x, fixed));  break;
     }
@@ -160,12 +157,51 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
         }
 
     setScore(0);
-    setActive(New(20));
+    setActive(New(0));
     setFixed([...Array(constants.Fixed.height)].map(() => Array(constants.Fixed.width).fill(constants.State.none)));
     setNext(New(0));
     setHold([...Array(constants.Fixed.height)].map(() => Array(constants.Fixed.width).fill(constants.State.none)))
     setIsHold(false);
     setStep(0);
+  }
+
+  const Rotate = (active: string[][], fixed: string[][]): string[][] => {
+    let center = {row: 0, column: 0};
+    active.map(x => Array.from(x)).forEach((line, r) => line.forEach((cell, c) => { if(cell === constants.State.center){ center = {row: r, column: c}; }}));
+    let result = active.map((x)=> Array.from(x));
+    let temp = [];
+    for(let r = 0; r < active.length; r++){
+      for(let c = 0; c < active[r].length; c++){
+        if(active[r][c] !== "around"){
+          continue;
+        }
+        let row = center.row + (c - center.column);
+        let column = center.column - (r - center.row);
+
+        //回転すると縦にはみ出す場合
+        if(row < 0 || active.length <= row){
+          return active;
+        }
+        //回転すると横にはみ出す場合
+        if(column < 0 || active[r].length <= column){
+          return active;
+        }
+        //回転すると他のブロックに接触する場合
+        if(fixed[row][column] !== constants.State.none){
+          return active;
+        }
+        result[r][c] = constants.State.none;
+        temp.push({row: row, column: column});
+      }
+    }
+    temp.forEach(x => result[x.row][x.column] = constants.State.around);
+    return result;
+  }
+
+  const Accelerate = () => {
+    window.clearTimeout(timeoutId);
+    setAccelerate(true);
+    setStep(x => x + 1)
   }
 
   const MoveLeft = (active: string[][], fiexed: string[][]): string[][] => {
@@ -201,39 +237,6 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
         result[r][c] = constants.State.none;
      }
     }
-    return result;
-  }
-
-  const Rotate = (active: string[][], fixed: string[][]): string[][] => {
-    let center = {row: 0, column: 0};
-    active.map(x => Array.from(x)).forEach((line, r) => line.forEach((cell, c) => { if(cell === constants.State.center){ center = {row: r, column: c}; }}));
-    let result = active.map((x)=> Array.from(x));
-    let temp = [];
-    for(let r = 0; r < active.length; r++){
-      for(let c = 0; c < active[r].length; c++){
-        if(active[r][c] !== "around"){
-          continue;
-        }
-        let row = center.row + (c - center.column);
-        let column = center.column - (r - center.row);
-
-        //回転すると縦にはみ出す場合
-        if(row < 0 || active.length <= row){
-          return active;
-        }
-        //回転すると横にはみ出す場合
-        if(column < 0 || active[r].length <= column){
-          return active;
-        }
-        //回転すると他のブロックに接触する場合
-        if(fixed[row][column] !== constants.State.none){
-          return active;
-        }
-        result[r][c] = constants.State.none;
-        temp.push({row: row, column: column});
-      }
-    }
-    temp.forEach(x => result[x.row][x.column] = constants.State.around);
     return result;
   }
 
@@ -350,7 +353,7 @@ const Game = React.forwardRef(({accelerate, setAccelerate, step, setStep, score,
     result[cell.row][cell.column] = constants.State.center;
 
     //ブロックサイズを設定
-    let max = 4 + (score / 20);
+    let max = 5 + (score / 20);
     let length = number.Random(4, max);
 
     for(let i = 0; i < length - 1; i++){

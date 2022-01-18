@@ -1,5 +1,7 @@
 
 export type GameType = {
+  timeoutId: number,
+  setTimeoutId: React.Dispatch<React.SetStateAction<number>>,
   accelerate: boolean,
   setAccelerate: React.Dispatch<React.SetStateAction<boolean>>,
   step: number,
