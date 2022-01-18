@@ -63,13 +63,14 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
 //---タッチスクリーン---
   window.ontouchstart = (e) => {
     e.preventDefault();
+    window.swipe.activate = true;
     window.swipe.start.x = e.touches[0].pageX;
     window.swipe.start.y = e.touches[0].pageY;
   }
 
    window.ontouchmove = (e) => {
     e.preventDefault();
-    window.swipe.activate = true;
+    window.swipe.move = true;
     window.swipe.curent.x = e.touches[0].pageX;
     window.swipe.curent.y = e.touches[0].pageY;
     
@@ -80,14 +81,16 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
     let margin = ref.current.offsetWidth * 0.75;
 
     //上にスワイプ
-    if(window.swipe.curent.y < window.swipe.start.y - 50){
+    if(window.swipe.activate && window.swipe.curent.y < window.swipe.start.y - 30){
       Exchange();
+      window.swipe.activate = false;
       return;
     }
 
     //下にスワイプ
-    if(window.swipe.curent.y > window.swipe.start.y + 50){
+    if(window.swipe.activate && window.swipe.curent.y > window.swipe.start.y + 30){
       setActive(x => HardDrop(x, fixed));
+      window.swipe.activate = false;
       return;
     }
 
@@ -110,12 +113,12 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
 
   window.ontouchend = (e) => {
     e.preventDefault();
-
     // setAccelerate(false);
-    if(!window.swipe.activate){
+    if(!window.swipe.move){
       setActive(x => Rotate(x, fixed));
     }
     window.swipe.activate = false;
+    window.swipe.move = false;
   }
 //--------------------
 
@@ -144,7 +147,8 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
   const Initialize = () => {
     window.KeyDown = {};
         window.swipe = {
-          activate: false, 
+          activate: false,
+          move: false,
           start: {
             x: 0,
             y: 0,

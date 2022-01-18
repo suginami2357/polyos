@@ -5,6 +5,7 @@ interface Window {
 
   swipe: {
     activate: boolean;
+    move: boolean;
     start: {
       x: number,
       y: number,
