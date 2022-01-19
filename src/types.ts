@@ -1,9 +1,9 @@
 
 export type GameType = {
-  timeoutId: number,
-  setTimeoutId: React.Dispatch<React.SetStateAction<number>>,
   step: number,
   setStep: React.Dispatch<React.SetStateAction<number>>,
+  exclusion: boolean,
+  setExclusion: React.Dispatch<React.SetStateAction<boolean>>,
   score: number,
   setScore: React.Dispatch<React.SetStateAction<number>>,
   active: string[][],

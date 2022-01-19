@@ -12,4 +12,4 @@ export const State = {
   none: "none",
   center: "center",
   around: "around",
-}
+} as const;

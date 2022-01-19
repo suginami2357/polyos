@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import Game from "./pages/Game";
 
 function App() {
-  const[timeoutId, setTimeoutId] = useState<number>(0);
-  // const[accelerate, setAccelerate] = useState<boolean>(false);
+  const[exclusion, setExclusion] = useState<boolean>(false);
   const[step, setStep] = useState<number>(0);
   const[score, setScore] = useState<number>(0);
   const[activate, setActivate] = useState<string[][]>([]);
@@ -15,9 +14,8 @@ function App() {
   return (
     <div className="App">
         <Game
-          timeoutId={timeoutId}   setTimeoutId={setTimeoutId}
-          // accelerate={accelerate} setAccelerate={setAccelerate}
           step={step}             setStep={setStep}
+          exclusion={exclusion}   setExclusion={setExclusion}
           score={score}           setScore={setScore}
           active={activate}       setActive={setActivate}
           fixed={fixed}           setFixed={setFixed}

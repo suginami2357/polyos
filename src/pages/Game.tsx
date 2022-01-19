@@ -8,16 +8,21 @@ import * as constants from "../constants";
 import * as number from "../libs/number";
 import Hold from '../components/Hold';
 
-const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, setScore, active, setActive, fixed, setFixed, next, setNext, hold, setHold, isHold, setIsHold}: types.GameType)=> {
+const Game = React.forwardRef(({step, setStep, exclusion, setExclusion, score, setScore, active, setActive, fixed, setFixed, next, setNext, hold, setHold, isHold, setIsHold}: types.GameType)=> {
   const ref = useRef<HTMLTableCellElement>(null)
 
   useEffect(() => {
     (async() => {
+      //排他制御
+      setExclusion(true);
+
       //接触判定
       if(!Collision(active, fixed)){
+
         //ブロック落下
         setActive(x => Fall(x));
       } else{
+
         //ゲームオーバー判定
         if(active.length > 0 && GameOver(active)){
           Initialize();
@@ -44,13 +49,13 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
 
         //ホールド許可
         setIsHold(false);
-
-        // //加速を中止
-        // setAccelerate(false);
       }
 
+      //排他制御
+      setExclusion(false);
+
       //落下の間隔
-      await new Promise(r => {setTimeoutId(window.setTimeout(r, Math.max(100, 800 - (score * 10))))});
+      await new Promise(r => {(window.setTimeout(r, Math.max(100, 800 - (score * 10))))});
 
       setStep(step + 1);
     })();
@@ -69,6 +74,9 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
   }
 
    window.ontouchmove = (e) => {
+     if(exclusion){
+       return;
+     }
     e.preventDefault();
     window.swipe.move = true;
     window.swipe.curent.x = e.touches[0].pageX;
@@ -89,7 +97,7 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
 
     //下にスワイプ
     if(window.swipe.activate && window.swipe.curent.y > window.swipe.start.y + 30){
-      setActive(x => HardDrop(x, fixed));
+      setActive(HardDrop(active, fixed));
       window.swipe.activate = false;
       return;
     }
@@ -97,7 +105,6 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
     //左にスワイプ
     if(origin < -margin){
       setActive(x => MoveLeft(x, fixed));
-      // setAccelerate(false);
       window.swipe.start = {x: window.swipe.curent.x, y: window.swipe.curent.y};
       return;
     } 
@@ -105,7 +112,6 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
     //右にスワイプ
     if(origin > margin){
       setActive(x => MoveRight(x, fixed));
-      // setAccelerate(false);
       window.swipe.start = {x: window.swipe.curent.x, y: window.swipe.curent.y};
       return;
     }
@@ -113,7 +119,6 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
 
   window.ontouchend = (e) => {
     e.preventDefault();
-    // setAccelerate(false);
     if(!window.swipe.move){
       setActive(x => Rotate(x, fixed));
     }
@@ -124,6 +129,10 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
 
 //---キーボード操作---
   window.onkeydown = (e) => {
+    if(exclusion){
+      return;
+    }
+
     if(window.KeyDown[e.key]){ 
       return; 
     } 
@@ -132,7 +141,7 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
     switch (e.key) {
       case 'Enter'      : Exchange();                           break;
       case 'ArrowUp'    : setActive(x => Rotate(x, fixed));     break;
-      case 'ArrowDown'  : setActive(x => HardDrop(x, fixed));   break;
+      case 'ArrowDown'  : setActive(HardDrop(active, fixed));   break;
       case 'ArrowLeft'  : setActive(x => MoveLeft(x, fixed));   break;
       case 'ArrowRight' : setActive(x => MoveRight(x, fixed));  break;
     }
@@ -140,10 +149,8 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
 
   window.onkeyup = (e) => {
     window.KeyDown[e.key] = false;
-    // setAccelerate(false);
   }
 //--------------------
-
   const Initialize = () => {
     window.KeyDown = {};
         window.swipe = {
@@ -159,9 +166,7 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
           }
         }
 
-    setTimeoutId(0);
-    // setAccelerate(false);
-    setStep(0);
+    setStep(1);
     setScore(0);
     setActive(New(0));
     setFixed([...Array(constants.Fixed.height)].map(() => Array(constants.Fixed.width).fill(constants.State.none)));
@@ -204,11 +209,13 @@ const Game = React.forwardRef(({timeoutId, setTimeoutId, step, setStep, score, s
   }
 
   const HardDrop = (active: string[][], fiexed: string[][]): string[][] => {
+    let value = active.map(x => Array.from(x));
     let result = active.map(x => Array.from(x));
-    while(!Collision(result, fiexed)){
-      result = Fall(result);
+    while(!Collision(value, fiexed)){
+      result = value.map(x => Array.from(x));
+      value = Fall(value);
     }
-    return result;
+    return value;
   }
 
   const MoveLeft = (active: string[][], fiexed: string[][]): string[][] => {
